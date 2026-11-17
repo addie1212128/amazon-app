@@ -115,6 +115,7 @@ input[type=text].in,select.in{height:36px;border:1px solid var(--line);border-ra
 select.in{max-width:118px}
 
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chips.presets{max-height:150px;overflow-y:auto;padding:7px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-top:8px}
 .chip{padding:7px 12px;border:1px solid var(--line);background:var(--surface);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-soft)}
 .chip.on{background:var(--earth-soft);border-color:color-mix(in srgb,var(--earth) 45%,transparent);color:var(--earth)}
 .chip.on.green{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
@@ -685,9 +686,9 @@ function renderPanel(){ renderRoomCard(); renderTotalsOnly(); renderConstruction
 function renderRoomCard(){
   var body=document.getElementById("roomBody"), r=getRoom(selId);
   if(!r){ body.innerHTML='<div class="empty-sel">No room selected.<br>Tap <b>Room</b> in the toolbar to draw one, or tap an existing room to edit it.</div>'; return; }
-  var presets=["Living Room","Kitchen","Bedroom","Bathroom","Dining","Office","Hall","Closet","Porch","Utility","Garage","Studio"];
+  var presets=["Living Room","Great Room","Family Room","Kitchen","Pantry","Dining","Bedroom","Bathroom","Closet","Foyer","Mudroom","Hall","Stairwell","Laundry","Office","Studio","Library","Craft Room","Workshop","Game Room","Theater","Gym","Wine Cellar","Loft","Utility","Mechanical","Storage","Garage","Porch","Fireplace"];
   var h='<input class="in" id="roomName" type="text" value="'+esc(r.name)+'" placeholder="Room name">';
-  h+='<div class="chips" id="roomPresets">'; presets.forEach(function(n){ h+='<button class="chip" data-name="'+esc(n)+'">'+n+'</button>'; }); h+='</div>';
+  h+='<div class="chips presets" id="roomPresets">'; presets.forEach(function(n){ h+='<button class="chip" data-name="'+esc(n)+'">'+esc(n)+'</button>'; }); h+='</div>';
   h+='<div class="stat-grid"><div class="stat"><div class="k">Width</div><div class="v">'+fmtFt(r.w)+'</div></div><div class="stat"><div class="k">Depth</div><div class="v">'+fmtFt(r.h)+'</div></div></div>';
   h+='<div class="field"><label>Size</label><div class="ctl"><span class="note" style="margin:0;font-weight:700;color:var(--accent)">'+fmt(r.w*r.h)+' sq ft</span></div></div>';
   // openings
@@ -711,7 +712,7 @@ function renderOpenings(r){
     h+='<div class="op-row" data-id="'+o.id+'">';
     h+='<span class="tag">'+(o.type==="door"?"🚪 Door":"🪟 Window")+'</span>';
     h+='<select class="opWall">'; wallOpts.forEach(function(w){ h+='<option value="'+w[0]+'"'+(o.wall===w[0]?" selected":"")+'>'+w[1]+'</option>'; }); h+='</select>';
-    h+='<div class="num"><button class="opW-">−</button><input class="opW" type="number" inputmode="decimal" value="'+o.w+'"><button class="opW+">＋</button></div>';
+    h+='<div class="num"><button class="opWm">−</button><input class="opW" type="number" inputmode="decimal" value="'+o.w+'"><button class="opWp">＋</button></div>';
     h+='<button class="op-del">🗑</button>';
     h+='</div>';
   });
@@ -719,8 +720,8 @@ function renderOpenings(r){
   list.querySelectorAll(".op-row").forEach(function(row){ var id=row.getAttribute("data-id"); var o=plan.openings.filter(function(x){return x.id===id;})[0]; if(!o)return;
     row.querySelector(".opWall").addEventListener("change",function(e){ o.wall=e.target.value; pushHistory(); persist(); draw(); });
     var inp=row.querySelector(".opW");
-    row.querySelector(".opW-").onclick=function(){ o.w=Math.max(1,+(o.w-0.5).toFixed(1)); inp.value=o.w; persist(); draw(); };
-    row.querySelector(".opW+").onclick=function(){ o.w=+(o.w+0.5).toFixed(1); inp.value=o.w; persist(); draw(); };
+    row.querySelector(".opWm").onclick=function(){ o.w=Math.max(1,+(o.w-0.5).toFixed(1)); inp.value=o.w; persist(); draw(); };
+    row.querySelector(".opWp").onclick=function(){ o.w=+(o.w+0.5).toFixed(1); inp.value=o.w; persist(); draw(); };
     inp.addEventListener("change",function(){ o.w=Math.max(1,+inp.value||1); inp.value=o.w; persist(); draw(); });
     row.querySelector(".op-del").onclick=function(){ pushHistory(); plan.openings=plan.openings.filter(function(x){return x.id!==id;}); persist(); draw(); renderOpenings(r); renderTotalsOnly(); };
   });
