@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#2f6d4f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Groundwork</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: 3-pane studio — tool rail, drafting canvas, numbers panel. Earthy-technical palette. */
+:root{
+  --paper:#f3f1ea; --surface:#faf9f4; --surface-2:#ece9df; --sunken:#e6e2d6;
+  --ink:#262420; --ink-soft:#6c675c; --line:#d7d2c4;
+  --grid:#e5e1d4; --grid-major:#cdc7b5;
+  --floor:#fdfcf8; --wall:#33302a;
+  --accent:#2f6d4f; --accent-2:#275c43; --accent-soft:#e2ece5;
+  --earth:#b06d35; --earth-soft:#f0e5d6;
+  --good:#2f7d4f; --warn:#b06d35; --bad:#b0432c;
+  --radius:12px; --font:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --display:"Space Grotesk",var(--font); --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light; -webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#1b1a16; --surface:#232119; --surface-2:#2b2920; --sunken:#17160f;
+  --ink:#ece8de; --ink-soft:#a39d8c; --line:#39352c;
+  --grid:#2a2820; --grid-major:#3a362c;
+  --floor:#201e18; --wall:#cbc5b4;
+  --accent:#64b98a; --accent-2:#7cc79a; --accent-soft:#213027;
+  --earth:#d79f62; --earth-soft:#2e2619;
+  --good:#64b98a; --warn:#d79f62; --bad:#e0745a;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#1b1a16; --surface:#232119; --surface-2:#2b2920; --sunken:#17160f;
+  --ink:#ece8de; --ink-soft:#a39d8c; --line:#39352c;
+  --grid:#2a2820; --grid-major:#3a362c;
+  --floor:#201e18; --wall:#cbc5b4;
+  --accent:#64b98a; --accent-2:#7cc79a; --accent-soft:#213027;
+  --earth:#d79f62; --earth-soft:#2e2619;
+  --good:#64b98a; --warn:#d79f62; --bad:#e0745a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);
+  font-size:14px;line-height:1.45;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+[hidden]{display:none!important}
+
+#app{display:flex;flex-direction:column;height:100%}
+
+/* ---- Top bar ---- */
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:8px max(12px,env(safe-area-inset-left,0)) 8px max(12px,env(safe-area-inset-right,0));
+  background:var(--surface);border-bottom:1px solid var(--line);z-index:6}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand svg{width:26px;height:26px;flex:0 0 auto}
+.brand small{font-family:var(--font);font-weight:500;font-size:11px;color:var(--ink-soft);letter-spacing:.02em}
+.plans{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap}
+.plans input,.plans select,.btn{height:38px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:0 11px}
+.plans input{min-width:0;width:168px;font-weight:600}
+.plans select{max-width:150px}
+.btn{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.sm{height:34px;padding:0 10px;font-size:13px}
+.icon-btn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-size:17px}
+
+/* ---- Workspace ---- */
+.workspace{flex:1;min-height:0;display:flex}
+.toolrail{flex:0 0 auto;display:flex;flex-direction:column;gap:7px;padding:10px 8px;
+  background:var(--surface);border-right:1px solid var(--line);overflow:auto;z-index:5}
+.tool{width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border:1px solid transparent;border-radius:11px;color:var(--ink-soft);font-size:10px;font-weight:600}
+.tool svg{width:21px;height:21px}
+.tool.active{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.tool:disabled{opacity:.35}
+.rail-sep{height:1px;background:var(--line);margin:3px 6px}
+
+.canvas-wrap{position:relative;flex:1;min-width:0;background:var(--paper);overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:88%;
+  background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);
+  color:var(--ink-soft);padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:500;
+  pointer-events:none;text-align:center;backdrop-filter:blur(4px);z-index:2;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.panel-toggle{position:absolute;right:12px;bottom:14px;z-index:3;display:none}
+
+/* ---- Panel ---- */
+.panel{flex:0 0 352px;max-width:85vw;background:var(--surface);border-left:1px solid var(--line);
+  overflow-y:auto;overflow-x:hidden;padding:14px 14px 40px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:13px}
+.card h3{margin:0 0 3px;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+.card h3 .t{color:var(--ink);text-transform:none;font-size:15px;letter-spacing:0}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.stat .k{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.stat .v{font-family:var(--display);font-size:21px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:12px;font-weight:600;color:var(--ink-soft)}
+
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+.field label{font-size:13px;font-weight:600}
+.field .ctl{display:flex;align-items:center;gap:4px}
+.num{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:9px;background:var(--surface);overflow:hidden}
+.num button{width:32px;height:34px;font-size:18px;font-weight:600;color:var(--ink-soft)}
+.num input{width:52px;height:34px;border:0;background:transparent;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=text].in,select.in{height:36px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:0 10px;width:100%}
+select.in{max-width:118px}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{padding:7px 12px;border:1px solid var(--line);background:var(--surface);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.chip.on{background:var(--earth-soft);border-color:color-mix(in srgb,var(--earth) 45%,transparent);color:var(--earth)}
+.chip.on.green{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.badge{font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft)}
+.badge b{color:var(--ink);font-weight:700}
+
+.mats{margin-top:11px;display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mat{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;background:var(--surface);font-size:13px}
+.mat:nth-child(even){background:var(--surface-2)}
+.mat .k{color:var(--ink-soft);font-weight:500}
+.mat .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;font-family:var(--mono);font-size:12.5px}
+
+.needs{list-style:none;margin:11px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+.needs li{display:flex;gap:8px;font-size:13px;line-height:1.4}
+.needs li svg{flex:0 0 auto;width:16px;height:16px;margin-top:2px;color:var(--accent)}
+
+.note{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-top:10px}
+.cost-big{font-family:var(--display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.cost-sub{font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:1px}
+
+.disclaimer{font-size:11.5px;color:var(--ink-soft);line-height:1.5;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;background:transparent}
+.disclaimer b{color:var(--warn)}
+
+details.rec summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+details.rec summary::-webkit-details-marker{display:none}
+details.rec summary .chev{transition:transform .2s}
+details.rec[open] summary .chev{transform:rotate(180deg)}
+.rec-result{margin-top:11px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:10px;padding:11px 12px}
+.rec-result .pick{font-family:var(--display);font-weight:700;font-size:16px;color:var(--accent)}
+
+.room-openings{margin-top:11px;display:flex;flex-direction:column;gap:8px}
+.op-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px}
+.op-row .tag{font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px}
+.op-row select{height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:0 6px;font-size:12px}
+.op-row .num{margin-left:auto}
+.op-row .num input{width:42px;height:30px}
+.op-row .num button{width:28px;height:30px}
+.op-del{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--bad);font-size:15px;display:inline-flex;align-items:center;justify-content:center}
+.empty-sel{color:var(--ink-soft);font-size:13px;text-align:center;padding:14px 8px;line-height:1.5}
+
+.row2{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.row2 .btn{flex:1}
+textarea.backup{width:100%;height:70px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:8px;font-family:var(--mono);font-size:11px;margin-top:8px;resize:vertical}
+
+/* overlay (image export) */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+.overlay img{max-width:100%;max-height:74%;border-radius:8px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.5);-webkit-user-select:auto;user-select:auto}
+.overlay p{color:#fff;font-weight:600;text-align:center;max-width:420px}
+.overlay .btn{background:#fff;color:#111}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:50;
+  background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;
+  opacity:0;transition:.22s;pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast button{color:var(--accent-2);font-weight:700;pointer-events:auto}
+:root[data-theme="dark"] .toast button,:root:not([data-theme="light"]) .toast button{color:var(--accent)}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:4;display:none}
+
+@media (max-width:820px){
+  .workspace{flex-direction:column}
+  .toolrail{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);padding:7px 8px;gap:6px}
+  .tool{width:52px;height:46px}
+  .rail-sep{width:1px;height:auto;margin:4px 3px}
+  .panel{position:fixed;right:0;top:0;bottom:0;z-index:20;transform:translateX(100%);transition:transform .25s ease;box-shadow:-8px 0 30px rgba(0,0,0,.18)}
+  .panel.open{transform:none}
+  .panel-toggle{display:inline-flex}
+  .scrim.show{display:block}
+  .plans input{width:130px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="2.5" y="12" width="27" height="17.5" rx="1.5" stroke="var(--accent)" stroke-width="2"/><path d="M2 13 16 3l14 10" stroke="var(--earth)" stroke-width="2" stroke-linejoin="round"/><path d="M12 29.5V20h8v9.5" stroke="var(--accent)" stroke-width="2"/></svg>
+      <span>Groundwork<br><small>floor plans · costs · earth builds</small></span>
+    </div>
+    <div class="plans">
+      <input id="planName" type="text" aria-label="Plan name" placeholder="Plan name">
+      <select id="planList" aria-label="Switch plan"></select>
+      <button class="btn sm ghost" id="newPlan" title="New plan">＋ New</button>
+      <button class="icon-btn" id="dupPlan" title="Duplicate plan">⧉</button>
+      <button class="icon-btn" id="delPlan" title="Delete plan">🗑</button>
+      <button class="icon-btn" id="themeBtn" title="Light / dark">◐</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <nav class="toolrail" aria-label="Tools">
+      <button class="tool active" data-tool="select" title="Select / move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3l7 17 2.5-7L21 10.5 4 3z"/></svg>Select</button>
+      <button class="tool" data-tool="room" title="Draw a room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="1"/><path d="M3.5 12h17" stroke-dasharray="2 2"/></svg>Room</button>
+      <button class="tool" data-tool="pan" title="Pan the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>Pan</button>
+      <div class="rail-sep"></div>
+      <button class="tool" id="zoomIn" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M20 20l-3.5-3.5"/></svg>Zoom+</button>
+      <button class="tool" id="zoomOut" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-3.5-3.5"/></svg>Zoom−</button>
+      <button class="tool" id="fit" title="Fit plan to screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Fit</button>
+      <div class="rail-sep"></div>
+      <button class="tool" id="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 015 5v1"/></svg>Undo</button>
+      <button class="tool" id="del" title="Delete selected" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Delete</button>
+    </nav>
+
+    <div class="canvas-wrap">
+      <canvas id="c"></canvas>
+      <div class="hint" id="hint"></div>
+      <button class="btn primary panel-toggle" id="panelToggle">🔢 Numbers</button>
+    </div>
+
+    <aside class="panel" id="panel" aria-label="Details">
+      <!-- Selected room -->
+      <section class="card" id="roomCard">
+        <h3>✎ <span class="t">Room</span></h3>
+        <div id="roomBody"></div>
+      </section>
+
+      <!-- Totals -->
+      <section class="card">
+        <h3>📐 <span class="t">Plan totals</span></h3>
+        <div class="stat-grid" id="totals"></div>
+      </section>
+
+      <!-- Construction / numbers -->
+      <section class="card">
+        <h3>🧱 <span class="t">Build type &amp; cost</span></h3>
+        <div class="chips" id="ctChips"></div>
+        <div class="badges" id="ctBadges"></div>
+
+        <div class="field"><label for="wallH">Wall height</label>
+          <div class="ctl"><div class="num"><button data-step="wallH:-1">−</button><input id="wallH" type="number" inputmode="decimal" value="8"><button data-step="wallH:1">＋</button></div><span class="note" style="margin:0">ft</span></div>
+        </div>
+        <div class="field"><label for="costRate">Cost / sq ft</label>
+          <div class="ctl"><div class="num"><button data-step="costRate:-10">−</button><input id="costRate" type="number" inputmode="decimal" value="200"><button data-step="costRate:10">＋</button></div><span class="note" style="margin:0">$</span></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="cost-big" id="costOut">$0</div>
+          <div class="cost-sub" id="costSub"></div>
+        </div>
+
+        <div id="ctMats"></div>
+
+        <h3 style="margin-top:16px">🔨 <span class="t">What you'll need</span></h3>
+        <ul class="needs" id="ctNeeds"></ul>
+        <p class="note" id="ctNote"></p>
+        <p class="note" id="ctClimate" style="color:var(--earth);font-weight:600"></p>
+      </section>
+
+      <!-- Recommender -->
+      <section class="card">
+        <details class="rec" id="recDetails">
+          <summary><h3 style="margin:0">🌱 <span class="t">Which earth home fits me?</span></h3><span class="chev">▾</span></summary>
+          <p class="note" style="margin-top:9px">Answer two quick things and I'll suggest a build type.</p>
+          <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:11px">Your climate</div>
+          <div class="chips" id="recClimate"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:11px">Top priority</div>
+          <div class="chips" id="recPrio"></div>
+          <div class="rec-result" id="recResult" hidden></div>
+        </details>
+      </section>
+
+      <!-- Backup -->
+      <section class="card">
+        <h3>💾 <span class="t">Save &amp; backup</span></h3>
+        <p class="note" style="margin-top:7px">Plans auto-save on this tablet. Use these to move a plan between devices or keep a copy.</p>
+        <div class="row2">
+          <button class="btn sm" id="copyBackup">⧉ Copy backup</button>
+          <button class="btn sm" id="saveImg">🖼 Save image</button>
+        </div>
+        <details style="margin-top:10px"><summary class="note" style="cursor:pointer;font-weight:600">Restore from a backup…</summary>
+          <textarea class="backup" id="restoreBox" placeholder="Paste a copied backup here"></textarea>
+          <button class="btn sm" id="restoreBtn" style="margin-top:6px">Restore</button>
+        </details>
+      </section>
+
+      <p class="disclaimer"><b>Rough estimates only.</b> Quantities, costs and requirements are ballpark figures to help you plan early. Real materials, structural design, drainage and especially <b>local building codes</b> vary a lot — confirm everything with a local engineer or builder before you break ground.</p>
+    </aside>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================ Data ============================ */
+var fmt=function(n,d){ if(!isFinite(n))n=0; return Number(n).toLocaleString(undefined,{maximumFractionDigits:(d==null?0:d)}); };
+var uid=function(){ return Math.random().toString(36).slice(2,9); };
+var clone=function(o){ return JSON.parse(JSON.stringify(o)); };
+
+var CT = {
+  conventional:{ name:"Conventional frame", icon:"🏠", green:true, t:0.5, rate:200, range:[150,300],
+    mass:"Low", insul:"Add R-21", skill:"Standard trades", labor:"Medium",
+    climates:{hotdry:2,temperate:2,cold:2,wet:2}, prio:{cost:1,insulation:2,durability:2,diy:1},
+    climate:"Works in any climate — comfort comes from the insulation you add, not the walls themselves.",
+    needs:["Concrete footing or slab foundation","Framing lumber + sheathing + roof","Wall insulation (walls don't insulate on their own)","Vapor / air barrier","Standard permits & inspections"],
+    note:"The familiar option: fast, code-friendly, trades available everywhere. Not an earth build, but a useful baseline to compare against.",
+    mats:function(c){ return [["2x6 studs (16\" OC)",fmt(c.wallLen*0.9)+" pcs"],["Wall sheathing (4x8)",fmt(c.wallLen*c.h/32)+" sheets"],["Insulation","R-21 batt / blown"],["Foundation","footing or slab"]]; } },
+
+  earthbag:{ name:"Earthbag", icon:"🧺", t:1.25, rate:95, range:[40,160],
+    mass:"Very high", insul:"Low (mass)", skill:"Very DIY-friendly", labor:"Very high",
+    climates:{hotdry:3,temperate:3,cold:1,wet:1}, prio:{cost:3,insulation:1,durability:2,diy:3},
+    climate:"Best in hot-dry and temperate climates. In cold climates add exterior insulation; everywhere, keep the walls dry.",
+    needs:["Rubble-trench or gravel-bag foundation + good drainage","Polypropylene bags or tubing","4-point barbed wire between every course","Earthen or lime plaster, both sides","Strong bond beam + roof (or build a dome)","Buttresses for tall straight walls"],
+    note:"Cheap, heavy, and famously doable by hand. Material cost is low but it's a lot of labor — great for owner-builders with time.",
+    mats:function(c){ var face=c.wallLen*c.h, courses=Math.ceil(c.h/0.5), wire=c.wallLen*courses*2;
+      return [["Poly bags / tubing",fmt(face*1.33)+" bags"],["Barbed wire (4-pt)",fmt(wire)+" ft · "+Math.ceil(wire/1320)+" rolls"],["Wall fill (soil/gravel)",fmt(c.wallLen*c.h*c.t/27)+" cu yd"],["Courses",courses+" @ 6\""],["Plaster","earthen / lime"]]; } },
+
+  rammed:{ name:"Rammed earth", icon:"🧱", t:1.5, rate:250, range:[150,400],
+    mass:"Very high", insul:"Low (mass)", skill:"Moderate–high", labor:"High",
+    climates:{hotdry:3,temperate:3,cold:1,wet:1}, prio:{cost:1,insulation:1,durability:3,diy:1},
+    climate:"Shines in hot-dry and temperate climates with big daily temperature swings. Protect walls from driving rain.",
+    needs:["Strong reusable formwork","Right soil mix (~70% sand/gravel, 30% clay)","Pneumatic tamper","Solid foundation + stem wall","Generous roof overhangs (16–24\")"],
+    note:"Beautiful, rock-solid, and extremely durable. Needs good formwork and the right soil, so it's more equipment-heavy than cob or bags.",
+    mats:function(c){ var vol=c.wallLen*c.h*c.t;
+      return [["Soil mix",fmt(vol/27*1.1)+" cu yd"],["Formwork",fmt(c.wallLen)+" ft of wall"],["Cement (if stabilized)","~5–10% · optional"],["Roof overhang","16–24\""]]; } },
+
+  cob:{ name:"Cob", icon:"👐", t:1.5, rate:120, range:[60,200],
+    mass:"High", insul:"Low (mass)", skill:"Low / hands-on", labor:"Very high",
+    climates:{hotdry:2,temperate:3,cold:1,wet:1}, prio:{cost:3,insulation:1,durability:2,diy:3},
+    climate:"Loves temperate and hot-dry climates. Keep it under a 'good hat and good boots' — wide eaves and a dry foundation.",
+    needs:["Stone / rubble foundation up off the ground","Clay-rich subsoil, sand and straw","Wide roof eaves to shed rain","Earthen or lime plaster","Lots of time — it's slow and sculptural"],
+    note:"The most hands-on, sculptural earth build. Almost free materials, curved walls, built-in benches — but very labor-intensive and slow to dry.",
+    mats:function(c){ var vol=c.wallLen*c.h*c.t, mix=vol/27;
+      return [["Cob mix (clay+sand+straw)",fmt(mix)+" cu yd"],["Straw (fiber)",fmt(mix*0.8)+" bales"],["Stone foundation",fmt(c.wallLen)+" ft"],["Plaster","earthen / lime"]]; } },
+
+  adobe:{ name:"Adobe brick", icon:"🟫", t:1.0, rate:200, range:[160,350],
+    mass:"High", insul:"Low (mass)", skill:"Low–moderate", labor:"High",
+    climates:{hotdry:3,temperate:2,cold:1,wet:0}, prio:{cost:2,insulation:1,durability:2,diy:2},
+    climate:"Classic hot-dry / desert build. Needs dry weather to cure bricks and a good overhang + plaster to survive rain.",
+    needs:["Dry, sunny space to cure bricks","Clay + sand + straw for bricks & mortar","Foundation + moisture break","Protective plaster","Roof overhang to keep rain off"],
+    note:"Sun-dried mud bricks — ancient, proven, and moldable into whatever you can lay up. Best where it's warm and dry.",
+    mats:function(c){ var vol=c.wallLen*c.h*c.t;
+      return [["Adobe bricks (10x14x4\")",fmt(vol/0.324*0.85)+" bricks"],["Mud mortar",fmt(vol/27*0.2)+" cu yd"],["Curing yard","sunny & dry"],["Plaster","protect from rain"]]; } },
+
+  strawbale:{ name:"Straw bale", icon:"🌾", t:1.5, rate:160, range:[130,220],
+    mass:"Low", insul:"Very high (R-30+)", skill:"Moderate", labor:"Medium",
+    climates:{hotdry:2,temperate:3,cold:3,wet:1}, prio:{cost:2,insulation:3,durability:1,diy:2},
+    climate:"Best choice for cold climates — the walls are superb insulation. Detail carefully against moisture in wet regions.",
+    needs:["Raised foundation to keep bales dry","Dry straw bales (not hay)","Lime or earth plaster, both sides","Big roof overhangs","Post-and-beam frame if used as infill"],
+    note:"Thick, cozy, and the warmest of the bunch — insulation rather than thermal mass. The golden rule is keeping the bales dry.",
+    mats:function(c){ var face=c.wallLen*c.h;
+      return [["Straw bales",fmt(face/4.5)+" bales"],["Plaster (lime/earth)","both sides"],["Mesh & pins","wall ties"],["Frame","post & beam (infill)"]]; } },
+
+  earthship:{ name:"Earthship", icon:"🚜", t:2.5, rate:280, range:[200,450],
+    mass:"Very high + solar", insul:"High (bermed)", skill:"High / systems", labor:"Very high",
+    climates:{hotdry:3,temperate:3,cold:2,wet:2}, prio:{cost:1,insulation:2,durability:2,diy:1},
+    climate:"Designed to self-regulate almost anywhere — but passive-solar orientation (glass toward the equator) is non-negotiable.",
+    needs:["Earth-rammed tires for load-bearing walls","Glazed face toward the equator (passive solar)","Earth berming + thermal mass","Water catchment + cistern + greywater planters","Solar PV / off-grid systems","Check local code early — approvals can be tricky"],
+    note:"A whole off-grid system, not just walls: tire-and-earth mass, a solar greenhouse, water harvesting and power. Ambitious but self-sufficient.",
+    mats:function(c){ var face=c.wallLen*c.h;
+      return [["Used tires (rammed)",fmt(face*0.53)+" tires"],["Cans / bottles","infill walls"],["South glazing","solar face"],["Systems","cistern · greywater · PV"]]; } }
+};
+var CT_ORDER=["earthbag","cob","rammed","adobe","strawbale","earthship","conventional"];
+var CLIMATES=[["hotdry","Hot & dry"],["temperate","Temperate"],["cold","Cold"],["wet","Wet / humid"]];
+var PRIOS=[["cost","Lowest cost"],["insulation","Warmth"],["durability","Durability"],["diy","Easy DIY"]];
+
+/* ============================ State ============================ */
+var LS={ plans:"groundwork.plans.v1", cur:"groundwork.current.v1", theme:"groundwork.theme.v1" };
+function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+
+function blankPlan(name){ return { id:uid(), name:name||"Untitled plan", updated:Date.now(),
+  rooms:[], openings:[], construction:"earthbag", wallH:8, rates:{}, cam:{x:16,y:10}, scale:16 }; }
+
+function examplePlan(){
+  var p=blankPlan("Example · Earth Cabin");
+  function R(x,y,w,h,n){ return {id:uid(),x:x,y:y,w:w,h:h,name:n}; }
+  p.rooms=[ R(0,0,16,14,"Living / Kitchen"), R(16,0,12,14,"Bedroom"), R(16,14,12,8,"Bath") ];
+  var liv=p.rooms[0].id, bed=p.rooms[1].id, bath=p.rooms[2].id;
+  function O(r,wall,pos,w,t){ return {id:uid(),roomId:r,wall:wall,pos:pos,w:w,type:t}; }
+  p.openings=[ O(liv,"bottom",0.4,3,"door"), O(liv,"top",0.5,5,"window"), O(liv,"left",0.5,4,"window"),
+    O(bed,"right",0.5,4,"window"), O(bed,"top",0.6,4,"window"), O(bath,"bottom",0.5,2.5,"window") ];
+  p.cam={x:14,y:11}; p.scale=15;
+  return p;
+}
+
+var plans={}, cur=null, plan=null, selId=null, selOp=null;
+var undoStack=[], tool="select", P={};
+var rec={climate:null,prio:null};
+
+function loadPlans(){
+  try{ plans=JSON.parse(lsGet(LS.plans)||"{}"); }catch(e){ plans={}; }
+  if(!plans || typeof plans!=="object") plans={};
+  cur=lsGet(LS.cur);
+  if(!cur || !plans[cur]){
+    if(Object.keys(plans).length){ cur=Object.keys(plans)[0]; }
+    else { var ex=examplePlan(); plans[ex.id]=ex; cur=ex.id; }
+  }
+  plan=plans[cur];
+  // migrate missing fields
+  if(!plan.rates) plan.rates={};
+  if(plan.cam==null) plan.cam={x:16,y:10};
+  if(plan.scale==null) plan.scale=16;
+}
+function persist(){ plan.updated=Date.now(); try{ lsSet(LS.plans,JSON.stringify(plans)); lsSet(LS.cur,cur); }catch(e){} }
+function pushHistory(){ undoStack.push({rooms:clone(plan.rooms),openings:clone(plan.openings)}); if(undoStack.length>40)undoStack.shift(); }
+function undo(){ if(!undoStack.length){toast("Nothing to undo");return;} var h=undoStack.pop(); plan.rooms=h.rooms; plan.openings=h.openings; if(!plan.rooms.some(function(r){return r.id===selId;}))selId=null; selOp=null; persist(); draw(); renderPanel(); }
+
+/* ============================ Canvas ============================ */
+var canvas=document.getElementById("c"), ctx=canvas.getContext("2d"), DPR=1, W=0, H=0;
+function resize(){ var r=canvas.parentElement.getBoundingClientRect(); DPR=Math.min(window.devicePixelRatio||1,2.5);
+  W=Math.max(1,r.width); H=Math.max(1,r.height); canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR); draw(); }
+function refreshPalette(){ var s=getComputedStyle(document.documentElement); function g(n){return s.getPropertyValue(n).trim();}
+  P={paper:g("--paper"),grid:g("--grid"),gridMajor:g("--grid-major"),floor:g("--floor"),wall:g("--wall"),
+     ink:g("--ink"),inkSoft:g("--ink-soft"),accent:g("--accent"),earth:g("--earth"),line:g("--line"),surface:g("--surface")}; }
+
+function w2s(wx,wy){ var sc=plan.scale; return {x:W/2+(wx-plan.cam.x)*sc, y:H/2+(wy-plan.cam.y)*sc}; }
+function s2w(sx,sy){ var sc=plan.scale; return {x:plan.cam.x+(sx-W/2)/sc, y:plan.cam.y+(sy-H/2)/sc}; }
+var snapStep=1;
+function snap(v){ return Math.round(v/snapStep)*snapStep; }
+
+function wallThick(){ return (CT[plan.construction]||CT.earthbag).t; }
+
+function draw(){
+  if(!W) return;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=P.paper; ctx.fillRect(0,0,W,H);
+  drawGrid();
+  // rooms
+  for(var i=0;i<plan.rooms.length;i++) drawRoom(plan.rooms[i]);
+  // selection
+  var sel=getRoom(selId); if(sel) drawSelection(sel);
+  // draft preview
+  if(draft) drawDraft();
+  drawScaleBar();
+}
+
+function drawGrid(){
+  var sc=plan.scale, tl=s2w(0,0), br=s2w(W,H);
+  var minor=snapStep, major=5;
+  ctx.lineWidth=1;
+  if(sc*minor>=7){
+    ctx.strokeStyle=P.grid; ctx.beginPath();
+    for(var x=Math.floor(tl.x/minor)*minor; x<=br.x; x+=minor){ var s=w2s(x,0).x; ctx.moveTo(s,0); ctx.lineTo(s,H); }
+    for(var y=Math.floor(tl.y/minor)*minor; y<=br.y; y+=minor){ var sy=w2s(0,y).y; ctx.moveTo(0,sy); ctx.lineTo(W,sy); }
+    ctx.stroke();
+  }
+  ctx.strokeStyle=P.gridMajor; ctx.beginPath();
+  for(var x2=Math.floor(tl.x/major)*major; x2<=br.x; x2+=major){ var s2=w2s(x2,0).x; ctx.moveTo(s2,0); ctx.lineTo(s2,H); }
+  for(var y2=Math.floor(tl.y/major)*major; y2<=br.y; y2+=major){ var sy2=w2s(0,y2).y; ctx.moveTo(0,sy2); ctx.lineTo(W,sy2); }
+  ctx.stroke();
+}
+
+var EDGES=[ ["top",1], ["bottom",-1], ["left",-1], ["right",1] ];
+function edgePts(r,wall){
+  if(wall==="top") return [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y}];
+  if(wall==="bottom") return [{x:r.x,y:r.y+r.h},{x:r.x+r.w,y:r.y+r.h}];
+  if(wall==="left") return [{x:r.x,y:r.y},{x:r.x,y:r.y+r.h}];
+  return [{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h}];
+}
+function interiorSign(wall){ return wall==="top"||wall==="right"?1:-1; }
+
+function drawRoom(r){
+  var sc=plan.scale, t=wallThick();
+  var a=w2s(r.x,r.y), b=w2s(r.x+r.w,r.y+r.h);
+  // floor
+  ctx.fillStyle=P.floor; ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);
+  // walls per edge with openings
+  for(var e=0;e<EDGES.length;e++){ var wall=EDGES[e][0]; drawEdge(r,wall,t*sc); }
+  // label
+  drawLabel(r,a,b);
+}
+function drawEdge(r,wall,tpx){
+  var p=edgePts(r,wall), A=w2s(p[0].x,p[0].y), B=w2s(p[1].x,p[1].y);
+  var dx=B.x-A.x, dy=B.y-A.y, len=Math.hypot(dx,dy); if(len<0.5) return;
+  var ux=dx/len, uy=dy/len;
+  var ops=plan.openings.filter(function(o){return o.roomId===r.id && o.wall===wall;}).map(function(o){
+    var s=o.pos*len-(o.w*plan.scale)/2, e=o.pos*len+(o.w*plan.scale)/2; return {s:Math.max(0,s),e:Math.min(len,e),o:o}; }).sort(function(m,n){return m.s-n.s;});
+  // wall segments
+  ctx.lineCap="butt"; ctx.lineWidth=tpx; ctx.strokeStyle=P.wall;
+  var pos=0; ctx.beginPath();
+  for(var i=0;i<ops.length;i++){ var s=ops[i].s, en=ops[i].e; if(s>pos){ ctx.moveTo(A.x+ux*pos,A.y+uy*pos); ctx.lineTo(A.x+ux*s,A.y+uy*s); } pos=Math.max(pos,en); }
+  if(pos<len){ ctx.moveTo(A.x+ux*pos,A.y+uy*pos); ctx.lineTo(A.x+ux*len,A.y+uy*len); }
+  ctx.stroke();
+  // openings
+  var nx=-uy, ny=ux, sgn=interiorSign(wall);
+  for(var j=0;j<ops.length;j++){
+    var O=ops[j], ow=O.e-O.s; if(ow<=0) continue;
+    var hx=A.x+ux*O.s, hy=A.y+uy*O.s, ex=A.x+ux*O.e, ey=A.y+uy*O.e;
+    if(O.o.type==="window"){
+      ctx.lineWidth=Math.max(1.5,tpx*0.16); ctx.strokeStyle=P.accent;
+      ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(ex,ey); ctx.stroke();
+    } else {
+      var inx=nx*sgn, iny=ny*sgn;
+      ctx.lineWidth=Math.max(1.4,tpx*0.14); ctx.strokeStyle=P.inkSoft; ctx.lineCap="round";
+      var lx=hx+inx*ow, ly=hy+iny*ow;
+      ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(lx,ly); ctx.stroke(); // leaf
+      var a0=Math.atan2(iny,inx), a1=Math.atan2(ey-hy,ex-hx), diff=a1-a0;
+      while(diff>Math.PI)diff-=2*Math.PI; while(diff<-Math.PI)diff+=2*Math.PI;
+      ctx.beginPath(); ctx.arc(hx,hy,ow,a0,a0+diff,diff<0); ctx.stroke();
+      ctx.lineCap="butt";
+    }
+  }
+}
+function drawLabel(r,a,b){
+  var cx=(a.x+b.x)/2, cy=(a.y+b.y)/2, boxW=Math.abs(b.x-a.x);
+  if(boxW<46) return;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillStyle=P.ink; ctx.font="600 13px "+getFont();
+  var name=r.name||"Room"; ctx.fillText(name,cx,cy-9,boxW-10);
+  ctx.fillStyle=P.inkSoft; ctx.font="500 11px "+getFont();
+  var dim=fmtFt(r.w)+" × "+fmtFt(r.h);
+  ctx.fillText(dim,cx,cy+6,boxW-10);
+  ctx.font="600 11px "+getFont(); ctx.fillStyle=P.accent;
+  ctx.fillText(fmt(r.w*r.h)+" sq ft",cx,cy+20,boxW-10);
+}
+function getFont(){ return "Inter,system-ui,sans-serif"; }
+function fmtFt(v){ var ft=Math.floor(v), inch=Math.round((v-ft)*12); if(inch===12){ft++;inch=0;} return inch?ft+"'"+inch+'"':ft+"'"; }
+
+function drawSelection(r){
+  var a=w2s(r.x,r.y), b=w2s(r.x+r.w,r.y+r.h);
+  ctx.save(); ctx.strokeStyle=P.accent; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+  ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.setLineDash([]);
+  var hs=handlePts(r);
+  for(var i=0;i<hs.length;i++){ var s=w2s(hs[i].x,hs[i].y); ctx.beginPath(); ctx.arc(s.x,s.y,9,0,7); ctx.fillStyle=P.surface; ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle=P.accent; ctx.stroke(); }
+  ctx.restore();
+}
+function handlePts(r){ return [ {x:r.x,y:r.y,c:"nw"},{x:r.x+r.w,y:r.y,c:"ne"},{x:r.x,y:r.y+r.h,c:"sw"},{x:r.x+r.w,y:r.y+r.h,c:"se"} ]; }
+
+var draft=null;
+function drawDraft(){ var a=w2s(draft.x,draft.y), b=w2s(draft.x+draft.w,draft.y+draft.h);
+  ctx.save(); ctx.fillStyle="color-mix(in srgb,"+P.accent+" 12%,transparent)"; ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);
+  ctx.strokeStyle=P.accent; ctx.lineWidth=2; ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
+  ctx.fillStyle=P.accent; ctx.font="600 12px "+getFont(); ctx.textAlign="center"; ctx.textBaseline="bottom";
+  if(Math.abs(draft.w)>=2&&Math.abs(draft.h)>=2) ctx.fillText(fmtFt(Math.abs(draft.w))+" × "+fmtFt(Math.abs(draft.h)),(a.x+b.x)/2,Math.min(a.y,b.y)-4);
+  ctx.restore(); }
+
+function drawScaleBar(){
+  var sc=plan.scale, target=90, ftRaw=target/sc;
+  var steps=[1,2,5,10,20,25,50,100], ft=steps[0];
+  for(var i=0;i<steps.length;i++){ if(steps[i]<=ftRaw) ft=steps[i]; }
+  var px=ft*sc, x=16, y=H-20;
+  ctx.save(); ctx.strokeStyle=P.inkSoft; ctx.fillStyle=P.inkSoft; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x,y-5); ctx.lineTo(x,y); ctx.lineTo(x+px,y); ctx.lineTo(x+px,y-5); ctx.stroke();
+  ctx.font="600 11px "+getFont(); ctx.textAlign="left"; ctx.textBaseline="bottom";
+  ctx.fillText(ft+" ft",x+4,y-3); ctx.restore();
+}
+
+/* ============================ Hit testing ============================ */
+function getRoom(id){ for(var i=0;i<plan.rooms.length;i++) if(plan.rooms[i].id===id) return plan.rooms[i]; return null; }
+function roomAt(wx,wy){ for(var i=plan.rooms.length-1;i>=0;i--){ var r=plan.rooms[i]; if(wx>=r.x&&wx<=r.x+r.w&&wy>=r.y&&wy<=r.y+r.h) return r; } return null; }
+function handleAt(r,sx,sy){ var hs=handlePts(r); for(var i=0;i<hs.length;i++){ var s=w2s(hs[i].x,hs[i].y); if(Math.hypot(s.x-sx,s.y-sy)<=20) return hs[i].c; } return null; }
+
+/* ============================ Pointer / gestures ============================ */
+var pointers={}, pcount=0, action=null, gesture=null, suppress=false, lastTap=0;
+function evPos(e){ var r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+
+canvas.addEventListener("pointerdown",function(e){
+  canvas.setPointerCapture(e.pointerId); var p=evPos(e); pointers[e.pointerId]={x:p.x,y:p.y}; pcount++;
+  if(pcount>=2){ startGesture(); action=null; draft=null; return; }
+  if(suppress) return;
+  startAction(p.x,p.y);
+});
+canvas.addEventListener("pointermove",function(e){
+  if(!(e.pointerId in pointers)) return; var p=evPos(e); pointers[e.pointerId]={x:p.x,y:p.y};
+  if(gesture && pcount>=2){ moveGesture(); return; }
+  if(action && pcount===1 && !suppress){ moveAction(p.x,p.y); }
+});
+function endPtr(e){ if(!(e.pointerId in pointers))return; delete pointers[e.pointerId]; pcount=Math.max(0,pcount-1);
+  try{canvas.releasePointerCapture(e.pointerId);}catch(_){}
+  if(pcount<2) gesture=null;
+  if(pcount===0){ if(action) endAction(); suppress=false; } }
+canvas.addEventListener("pointerup",endPtr); canvas.addEventListener("pointercancel",endPtr);
+
+canvas.addEventListener("wheel",function(e){ e.preventDefault(); var p=evPos(e); zoomAt(p.x,p.y,Math.pow(1.0015,-e.deltaY)); },{passive:false});
+
+function startGesture(){ suppress=true; var ids=Object.keys(pointers); var a=pointers[ids[0]], b=pointers[ids[1]];
+  var mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2}; gesture={dist:Math.hypot(a.x-b.x,a.y-b.y), mid:mid, world:s2w(mid.x,mid.y), scale:plan.scale}; }
+function moveGesture(){ var ids=Object.keys(pointers); if(ids.length<2)return; var a=pointers[ids[0]], b=pointers[ids[1]];
+  var dist=Math.hypot(a.x-b.x,a.y-b.y), mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  plan.scale=Math.max(3,Math.min(90,gesture.scale*(dist/gesture.dist)));
+  plan.cam.x=gesture.world.x-(mid.x-W/2)/plan.scale; plan.cam.y=gesture.world.y-(mid.y-H/2)/plan.scale;
+  draw(); schedulePersist(); }
+function zoomAt(sx,sy,f){ var before=s2w(sx,sy); plan.scale=Math.max(3,Math.min(90,plan.scale*f));
+  var after=s2w(sx,sy); plan.cam.x+=before.x-after.x; plan.cam.y+=before.y-after.y; draw(); schedulePersist(); }
+
+function startAction(sx,sy){
+  var w=s2w(sx,sy);
+  if(tool==="pan"){ action={type:"pan",lx:sx,ly:sy}; return; }
+  if(tool==="room"){ var s={x:snap(w.x),y:snap(w.y)}; draft={x:s.x,y:s.y,w:0,h:0,sx:s.x,sy:s.y}; action={type:"draw"}; setHint(); return; }
+  // select
+  var sel=getRoom(selId);
+  if(sel){ var hc=handleAt(sel,sx,sy); if(hc){ pushHistory(); var opp=oppCorner(sel,hc); action={type:"resize",fix:opp}; return; } }
+  var r=roomAt(w.x,w.y);
+  if(r){ // double tap to rename? select + move
+    selId=r.id; selOp=null; var now=Date.now();
+    pushHistory(); action={type:"move",gx:w.x-r.x,gy:w.y-r.y,moved:false};
+    renderPanel(); updateDelBtn(); draw(); lastTap=now;
+  } else { if(selId){ selId=null; selOp=null; renderPanel(); updateDelBtn(); } draw(); action={type:"none"}; }
+}
+function oppCorner(r,c){ if(c==="nw")return{x:r.x+r.w,y:r.y+r.h}; if(c==="ne")return{x:r.x,y:r.y+r.h}; if(c==="sw")return{x:r.x+r.w,y:r.y}; return{x:r.x,y:r.y}; }
+function moveAction(sx,sy){ var w=s2w(sx,sy);
+  if(!action) return;
+  if(action.type==="pan"){ plan.cam.x-=(sx-action.lx)/plan.scale; plan.cam.y-=(sy-action.ly)/plan.scale; action.lx=sx; action.ly=sy; draw(); return; }
+  if(action.type==="draw"){ draft.w=snap(w.x)-draft.sx; draft.h=snap(w.y)-draft.sy; draft.x=Math.min(draft.sx,snap(w.x)); draft.y=Math.min(draft.sy,snap(w.y)); draft.w=Math.abs(draft.w); draft.h=Math.abs(draft.h); draw(); return; }
+  if(action.type==="move"){ var r=getRoom(selId); if(!r)return; r.x=snap(w.x-action.gx); r.y=snap(w.y-action.gy); action.moved=true; draw(); renderTotalsOnly(); return; }
+  if(action.type==="resize"){ var r2=getRoom(selId); if(!r2)return; var nx=snap(w.x),ny=snap(w.y),f=action.fix;
+    var x=Math.min(nx,f.x),y=Math.min(ny,f.y),ww=Math.abs(nx-f.x),hh=Math.abs(ny-f.y);
+    ww=Math.max(2,ww); hh=Math.max(2,hh); r2.x=x; r2.y=y; r2.w=ww; r2.h=hh; draw(); renderTotalsOnly(); return; }
+}
+function endAction(){
+  if(action.type==="draw"){ if(draft && draft.w>=2 && draft.h>=2){ pushHistory(); var r={id:uid(),x:draft.x,y:draft.y,w:draft.w,h:draft.h,name:"Room "+(plan.rooms.length+1)}; plan.rooms.push(r); selId=r.id; selOp=null; setTool("select"); renderPanel(); updateDelBtn(); toast("Room added — name it on the right"); } draft=null; draw(); persist(); }
+  else if(action.type==="move"){ if(!action.moved){ undoStack.pop(); } persist(); renderPanel(); }
+  else if(action.type==="resize"){ persist(); renderPanel(); }
+  action=null;
+}
+
+/* ============================ Tools / UI ============================ */
+function setTool(t){ tool=t; var btns=document.querySelectorAll(".tool[data-tool]"); for(var i=0;i<btns.length;i++) btns[i].classList.toggle("active",btns[i].getAttribute("data-tool")===t); setHint(); }
+document.querySelectorAll(".tool[data-tool]").forEach(function(b){ b.addEventListener("click",function(){ setTool(b.getAttribute("data-tool")); }); });
+function setHint(){ var h=document.getElementById("hint"); var m={ select:"Tap a room to select · drag to move · drag a corner to resize · two fingers to pan/zoom", room:"Drag across the grid to draw a room (snaps to the grid)", pan:"Drag to move the view · pinch to zoom" }; h.textContent=m[tool]||""; }
+
+document.getElementById("zoomIn").onclick=function(){ zoomAt(W/2,H/2,1.2); };
+document.getElementById("zoomOut").onclick=function(){ zoomAt(W/2,H/2,1/1.2); };
+document.getElementById("fit").onclick=fitView;
+document.getElementById("undo").onclick=undo;
+document.getElementById("del").onclick=deleteSel;
+
+function deleteSel(){ if(!selId)return; pushHistory(); plan.rooms=plan.rooms.filter(function(r){return r.id!==selId;}); plan.openings=plan.openings.filter(function(o){return o.roomId!==selId;}); selId=null; selOp=null; persist(); draw(); renderPanel(); updateDelBtn(); toast("Room deleted","Undo",undo); }
+function updateDelBtn(){ document.getElementById("del").disabled=!selId; }
+
+function fitView(){ if(!plan.rooms.length){ plan.cam={x:16,y:10}; plan.scale=16; draw(); return; }
+  var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  plan.rooms.forEach(function(r){ minx=Math.min(minx,r.x);miny=Math.min(miny,r.y);maxx=Math.max(maxx,r.x+r.w);maxy=Math.max(maxy,r.y+r.h); });
+  var pad=4; minx-=pad;miny-=pad;maxx+=pad;maxy+=pad;
+  var sx=W/(maxx-minx), sy=H/(maxy-miny); plan.scale=Math.max(3,Math.min(90,Math.min(sx,sy)));
+  plan.cam={x:(minx+maxx)/2,y:(miny+maxy)/2}; draw(); schedulePersist(); }
+
+/* ============================ Numbers ============================ */
+function totals(){ var area=0,run=0,minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  plan.rooms.forEach(function(r){ area+=r.w*r.h; run+=2*(r.w+r.h); minx=Math.min(minx,r.x);miny=Math.min(miny,r.y);maxx=Math.max(maxx,r.x+r.w);maxy=Math.max(maxy,r.y+r.h); });
+  var fw=plan.rooms.length?maxx-minx:0, fh=plan.rooms.length?maxy-miny:0;
+  var doors=plan.openings.filter(function(o){return o.type==="door";}).length;
+  var wins=plan.openings.filter(function(o){return o.type==="window";}).length;
+  return {area:area,run:run,fw:fw,fh:fh,rooms:plan.rooms.length,doors:doors,wins:wins}; }
+
+function renderTotalsOnly(){ var t=totals(); var el=document.getElementById("totals"); if(!el)return;
+  el.innerHTML=
+    stat("Floor area",fmt(t.area),"sq ft")+
+    stat("Footprint",(t.rooms?fmtFt(t.fw)+"×"+fmtFt(t.fh):"—"),"")+
+    stat("Rooms",t.rooms,"")+
+    stat("Wall run",fmt(t.run),"ft")+
+    stat("Doors",t.doors,"")+
+    stat("Windows",t.wins,"");
+  renderCost(t);
+}
+function stat(k,v,u){ return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+(u?' <small>'+u+'</small>':'')+'</div></div>'; }
+
+function renderCost(t){ var c=CT[plan.construction]||CT.earthbag; var rate=plan.rates[plan.construction]!=null?plan.rates[plan.construction]:c.rate;
+  var est=t.area*rate; document.getElementById("costOut").textContent="$"+fmt(est);
+  document.getElementById("costSub").textContent=c.name+" · typical $"+c.range[0]+"–$"+c.range[1]+"/sq ft (DIY ↔ contracted)";
+  // materials
+  var ctx2={wallLen:t.run, h:plan.wallH, area:t.area, t:c.t};
+  var mats=c.mats(ctx2), html='<div class="mats">';
+  for(var i=0;i<mats.length;i++) html+='<div class="mat"><span class="k">'+mats[i][0]+'</span><span class="v">'+mats[i][1]+'</span></div>';
+  html+='</div>'; document.getElementById("ctMats").innerHTML=html;
+}
+
+/* ============================ Panel render ============================ */
+function renderPanel(){ renderRoomCard(); renderTotalsOnly(); renderConstruction(); }
+
+function renderRoomCard(){
+  var body=document.getElementById("roomBody"), r=getRoom(selId);
+  if(!r){ body.innerHTML='<div class="empty-sel">No room selected.<br>Tap <b>Room</b> in the toolbar to draw one, or tap an existing room to edit it.</div>'; return; }
+  var presets=["Living Room","Kitchen","Bedroom","Bathroom","Dining","Office","Hall","Closet","Porch","Utility","Garage","Studio"];
+  var h='<input class="in" id="roomName" type="text" value="'+esc(r.name)+'" placeholder="Room name">';
+  h+='<div class="chips" id="roomPresets">'; presets.forEach(function(n){ h+='<button class="chip" data-name="'+esc(n)+'">'+n+'</button>'; }); h+='</div>';
+  h+='<div class="stat-grid"><div class="stat"><div class="k">Width</div><div class="v">'+fmtFt(r.w)+'</div></div><div class="stat"><div class="k">Depth</div><div class="v">'+fmtFt(r.h)+'</div></div></div>';
+  h+='<div class="field"><label>Size</label><div class="ctl"><span class="note" style="margin:0;font-weight:700;color:var(--accent)">'+fmt(r.w*r.h)+' sq ft</span></div></div>';
+  // openings
+  h+='<h3 style="margin-top:14px">🚪 <span class="t">Doors &amp; windows</span></h3>';
+  h+='<div class="row2"><button class="btn sm" id="addDoor">＋ Door</button><button class="btn sm" id="addWindow">＋ Window</button></div>';
+  h+='<div class="room-openings" id="opList"></div>';
+  body.innerHTML=h;
+  document.getElementById("roomName").addEventListener("input",function(e){ r.name=e.target.value; schedulePersist(); draw(); });
+  document.querySelectorAll("#roomPresets .chip").forEach(function(b){ b.addEventListener("click",function(){ r.name=b.getAttribute("data-name"); document.getElementById("roomName").value=r.name; pushHistory(); persist(); draw(); }); });
+  document.getElementById("addDoor").onclick=function(){ addOpening("door"); };
+  document.getElementById("addWindow").onclick=function(){ addOpening("window"); };
+  renderOpenings(r);
+}
+function renderOpenings(r){
+  var list=document.getElementById("opList"); if(!list)return;
+  var ops=plan.openings.filter(function(o){return o.roomId===r.id;});
+  if(!ops.length){ list.innerHTML='<p class="note" style="margin-top:4px">No doors or windows yet.</p>'; return; }
+  var wallOpts=[["top","Top"],["bottom","Bottom"],["left","Left"],["right","Right"]];
+  var h="";
+  ops.forEach(function(o){
+    h+='<div class="op-row" data-id="'+o.id+'">';
+    h+='<span class="tag">'+(o.type==="door"?"🚪 Door":"🪟 Window")+'</span>';
+    h+='<select class="opWall">'; wallOpts.forEach(function(w){ h+='<option value="'+w[0]+'"'+(o.wall===w[0]?" selected":"")+'>'+w[1]+'</option>'; }); h+='</select>';
+    h+='<div class="num"><button class="opW-">−</button><input class="opW" type="number" inputmode="decimal" value="'+o.w+'"><button class="opW+">＋</button></div>';
+    h+='<button class="op-del">🗑</button>';
+    h+='</div>';
+  });
+  list.innerHTML=h;
+  list.querySelectorAll(".op-row").forEach(function(row){ var id=row.getAttribute("data-id"); var o=plan.openings.filter(function(x){return x.id===id;})[0]; if(!o)return;
+    row.querySelector(".opWall").addEventListener("change",function(e){ o.wall=e.target.value; pushHistory(); persist(); draw(); });
+    var inp=row.querySelector(".opW");
+    row.querySelector(".opW-").onclick=function(){ o.w=Math.max(1,+(o.w-0.5).toFixed(1)); inp.value=o.w; persist(); draw(); };
+    row.querySelector(".opW+").onclick=function(){ o.w=+(o.w+0.5).toFixed(1); inp.value=o.w; persist(); draw(); };
+    inp.addEventListener("change",function(){ o.w=Math.max(1,+inp.value||1); inp.value=o.w; persist(); draw(); });
+    row.querySelector(".op-del").onclick=function(){ pushHistory(); plan.openings=plan.openings.filter(function(x){return x.id!==id;}); persist(); draw(); renderOpenings(r); renderTotalsOnly(); };
+  });
+}
+function addOpening(type){ var r=getRoom(selId); if(!r){ toast("Select a room first"); return; }
+  pushHistory(); var wall=r.w>=r.h?"bottom":"left"; plan.openings.push({id:uid(),roomId:r.id,wall:wall,pos:0.5,w:type==="door"?3:3,type:type}); persist(); draw(); renderOpenings(r); renderTotalsOnly(); }
+
+function renderConstruction(){
+  var c=CT[plan.construction]||CT.earthbag;
+  var chips=document.getElementById("ctChips"), h="";
+  CT_ORDER.forEach(function(k){ var on=k===plan.construction; h+='<button class="chip'+(on?" on"+(CT[k].green?" green":""):"")+'" data-ct="'+k+'">'+CT[k].icon+" "+CT[k].name+'</button>'; });
+  chips.innerHTML=h;
+  chips.querySelectorAll(".chip").forEach(function(b){ b.addEventListener("click",function(){ plan.construction=b.getAttribute("data-ct"); var nc=CT[plan.construction]; document.getElementById("costRate").value=plan.rates[plan.construction]!=null?plan.rates[plan.construction]:nc.rate; persist(); draw(); renderConstruction(); renderTotalsOnly(); }); });
+  document.getElementById("ctBadges").innerHTML=
+    badge("Thermal mass",c.mass)+badge("Insulation",c.insul)+badge("Skill",c.skill)+badge("Labor",c.labor)+badge("Wall",fmtFt(c.t)+" thick");
+  var needs=document.getElementById("ctNeeds"), nh="";
+  c.needs.forEach(function(n){ nh+='<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg><span>'+n+'</span></li>'; });
+  needs.innerHTML=nh;
+  document.getElementById("ctNote").textContent=c.note;
+  document.getElementById("ctClimate").textContent="🌍 "+c.climate;
+  document.getElementById("wallH").value=plan.wallH;
+  document.getElementById("costRate").value=plan.rates[plan.construction]!=null?plan.rates[plan.construction]:c.rate;
+}
+function badge(k,v){ return '<span class="badge">'+k+' <b>'+v+'</b></span>'; }
+
+document.querySelectorAll("[data-step]").forEach(function(b){ b.addEventListener("click",function(){ var parts=b.getAttribute("data-step").split(":"); step(parts[0],+parts[1]); }); });
+function step(which,d){ if(which==="wallH"){ plan.wallH=Math.max(6,Math.min(20,+(plan.wallH+d))); document.getElementById("wallH").value=plan.wallH; }
+  else { var c=CT[plan.construction]; var cur2=plan.rates[plan.construction]!=null?plan.rates[plan.construction]:c.rate; plan.rates[plan.construction]=Math.max(0,cur2+d); document.getElementById("costRate").value=plan.rates[plan.construction]; }
+  persist(); renderTotalsOnly(); }
+document.getElementById("wallH").addEventListener("change",function(e){ plan.wallH=Math.max(6,Math.min(24,+e.target.value||8)); e.target.value=plan.wallH; persist(); renderTotalsOnly(); });
+document.getElementById("costRate").addEventListener("change",function(e){ plan.rates[plan.construction]=Math.max(0,+e.target.value||0); persist(); renderTotalsOnly(); });
+
+/* ---- Recommender ---- */
+function renderRec(){ var cl=document.getElementById("recClimate"), pr=document.getElementById("recPrio");
+  cl.innerHTML=CLIMATES.map(function(x){ return '<button class="chip'+(rec.climate===x[0]?" on":"")+'" data-cl="'+x[0]+'">'+x[1]+'</button>'; }).join("");
+  pr.innerHTML=PRIOS.map(function(x){ return '<button class="chip'+(rec.prio===x[0]?" on":"")+'" data-pr="'+x[0]+'">'+x[1]+'</button>'; }).join("");
+  cl.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ rec.climate=b.getAttribute("data-cl"); renderRec(); computeRec(); }; });
+  pr.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ rec.prio=b.getAttribute("data-pr"); renderRec(); computeRec(); }; });
+}
+function computeRec(){ var box=document.getElementById("recResult"); if(!rec.climate||!rec.prio){ box.hidden=true; return; }
+  var best=null,bestScore=-1; CT_ORDER.forEach(function(k){ var c=CT[k]; var s=c.climates[rec.climate]+c.prio[rec.prio]; if(s>bestScore){bestScore=s;best=k;} });
+  var c=CT[best]; var clLabel=CLIMATES.filter(function(x){return x[0]===rec.climate;})[0][1].toLowerCase();
+  var prLabel=PRIOS.filter(function(x){return x[0]===rec.prio;})[0][1].toLowerCase();
+  box.hidden=false;
+  box.innerHTML='<div class="pick">'+c.icon+' '+c.name+'</div><p class="note" style="margin-top:5px">A strong match for a <b>'+clLabel+'</b> climate when your priority is <b>'+prLabel+'</b>. '+c.note+'</p><button class="btn sm primary" id="useRec" style="margin-top:9px">Use this build type</button>';
+  document.getElementById("useRec").onclick=function(){ plan.construction=best; document.getElementById("costRate").value=plan.rates[best]!=null?plan.rates[best]:c.rate; persist(); draw(); renderConstruction(); renderTotalsOnly(); toast("Switched to "+c.name); };
+}
+
+/* ============================ Plans UI ============================ */
+function renderPlanBar(){ var sel=document.getElementById("planList"); var keys=Object.keys(plans).sort(function(a,b){return plans[b].updated-plans[a].updated;});
+  sel.innerHTML=keys.map(function(k){ return '<option value="'+k+'"'+(k===cur?" selected":"")+'>'+esc(plans[k].name)+'</option>'; }).join("");
+  document.getElementById("planName").value=plan.name; }
+document.getElementById("planList").addEventListener("change",function(e){ switchPlan(e.target.value); });
+document.getElementById("planName").addEventListener("input",function(e){ plan.name=e.target.value||"Untitled plan"; schedulePersist(); var sel=document.getElementById("planList"); var o=sel.querySelector('option[value="'+cur+'"]'); if(o)o.textContent=plan.name; });
+document.getElementById("newPlan").onclick=function(){ var p=blankPlan("Plan "+(Object.keys(plans).length+1)); plans[p.id]=p; switchPlan(p.id); setTool("room"); toast("New blank plan — draw your first room"); };
+document.getElementById("dupPlan").onclick=function(){ var p=clone(plan); p.id=uid(); p.name=plan.name+" copy"; p.updated=Date.now(); plans[p.id]=p; switchPlan(p.id); toast("Plan duplicated"); };
+document.getElementById("delPlan").onclick=function(){ var keys=Object.keys(plans); if(keys.length<=1){ toast("Can't delete your only plan"); return; }
+  toast("Delete \""+plan.name+"\"?","Delete",function(){ delete plans[cur]; cur=Object.keys(plans)[0]; plan=plans[cur]; selId=null;selOp=null;undoStack=[]; persist(); boot(); }); };
+function switchPlan(id){ if(!plans[id])return; cur=id; plan=plans[id]; if(!plan.rates)plan.rates={}; selId=null; selOp=null; undoStack=[]; persist(); boot(); }
+
+/* ============================ Backup / image ============================ */
+document.getElementById("copyBackup").onclick=function(){ var txt=JSON.stringify(plan); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){toast("Backup copied to clipboard");},function(){ fallbackCopy(txt); }); } else fallbackCopy(txt); };
+function fallbackCopy(txt){ var ta=document.getElementById("restoreBox"); ta.value=txt; ta.closest("details").open=true; ta.select(); toast("Backup ready — long-press to copy"); }
+document.getElementById("restoreBtn").onclick=function(){ var v=document.getElementById("restoreBox").value.trim(); if(!v){toast("Paste a backup first");return;}
+  try{ var p=JSON.parse(v); if(!p.rooms){throw 0;} p.id=uid(); p.name=(p.name||"Restored")+""; p.updated=Date.now(); if(!p.rates)p.rates={}; plans[p.id]=p; switchPlan(p.id); toast("Plan restored"); }catch(e){ toast("That doesn't look like a backup"); } };
+
+document.getElementById("saveImg").onclick=exportImage;
+function exportImage(){ var pad=40, minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  if(!plan.rooms.length){ toast("Draw a room first"); return; }
+  plan.rooms.forEach(function(r){ minx=Math.min(minx,r.x);miny=Math.min(miny,r.y);maxx=Math.max(maxx,r.x+r.w);maxy=Math.max(maxy,r.y+r.h); });
+  minx-=2;miny-=2;maxx+=2;maxy+=2; var sc=Math.min(1400/(maxx-minx),1000/(maxy-miny)); sc=Math.max(10,Math.min(40,sc));
+  var ocw=(maxx-minx)*sc+pad*2, och=(maxy-miny)*sc+pad*2+70;
+  var oc=document.createElement("canvas"); oc.width=ocw; oc.height=och; var o=oc.getContext("2d");
+  var bg=P.paper, flo=P.floor, wl=P.wall, ink=P.ink, soft=P.inkSoft, acc=P.accent;
+  o.fillStyle=bg; o.fillRect(0,0,ocw,och);
+  function tx(wx,wy){ return {x:pad+(wx-minx)*sc, y:pad+(wy-miny)*sc}; }
+  var t=totals(), c=CT[plan.construction]||CT.earthbag, tp=c.t*sc;
+  plan.rooms.forEach(function(r){ var a=tx(r.x,r.y), b=tx(r.x+r.w,r.y+r.h); o.fillStyle=flo; o.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);
+    o.lineWidth=tp; o.strokeStyle=wl; o.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
+    o.fillStyle=ink; o.textAlign="center"; o.font="600 14px Inter,sans-serif"; o.fillText(r.name||"Room",(a.x+b.x)/2,(a.y+b.y)/2-6);
+    o.fillStyle=soft; o.font="500 12px Inter,sans-serif"; o.fillText(fmtFt(r.w)+" × "+fmtFt(r.h)+" · "+fmt(r.w*r.h)+" sq ft",(a.x+b.x)/2,(a.y+b.y)/2+12); });
+  o.fillStyle=ink; o.textAlign="left"; o.font="700 20px 'Space Grotesk',Inter,sans-serif"; o.fillText(plan.name,pad,och-40);
+  o.fillStyle=soft; o.font="500 13px Inter,sans-serif";
+  o.fillText(fmt(t.area)+" sq ft · "+t.rooms+" rooms · "+c.name+" · est. $"+fmt(t.area*(plan.rates[plan.construction]!=null?plan.rates[plan.construction]:c.rate))+"  (rough estimate)",pad,och-18);
+  var url; try{ url=oc.toDataURL("image/png"); }catch(e){ toast("Couldn't make image"); return; }
+  showOverlay(url);
+}
+function showOverlay(url){ var ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML='<p>Long-press the image and choose <b>Save image</b> (or Download) to keep it on your tablet.</p><img src="'+url+'" alt="Floor plan"><button class="btn">Close</button>';
+  ov.querySelector("button").onclick=function(){ ov.remove(); }; ov.addEventListener("click",function(e){ if(e.target===ov)ov.remove(); });
+  document.body.appendChild(ov); }
+
+/* ============================ Misc ============================ */
+function esc(s){ return (s==null?"":""+s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+var toastT=null;
+function toast(msg,action,fn){ var el=document.getElementById("toast"); el.innerHTML=esc(msg)+(action?' <button id="toastAct">'+esc(action)+"</button>":"");
+  el.classList.add("show"); if(action&&fn){ document.getElementById("toastAct").onclick=function(){ el.classList.remove("show"); fn(); }; }
+  clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove("show"); },action?4200:2000); }
+
+var persistT=null;
+function schedulePersist(){ clearTimeout(persistT); persistT=setTimeout(persist,400); }
+
+// panel toggle (mobile)
+var panel=document.getElementById("panel"), scrim=document.getElementById("scrim");
+document.getElementById("panelToggle").onclick=function(){ panel.classList.add("open"); scrim.classList.add("show"); };
+scrim.onclick=function(){ panel.classList.remove("open"); scrim.classList.remove("show"); };
+
+// theme
+function applyTheme(t){ if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); lsSet(LS.theme,t||"system"); refreshPalette(); draw(); }
+document.getElementById("themeBtn").onclick=function(){ var cur2=lsGet(LS.theme)||"system"; var next=cur2==="system"?"light":cur2==="light"?"dark":"system"; applyTheme(next); toast("Theme: "+next); };
+window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){ refreshPalette(); draw(); });
+
+// keyboard niceties (desktop)
+window.addEventListener("keydown",function(e){ if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT")return;
+  if((e.key==="Delete"||e.key==="Backspace")&&selId){ e.preventDefault(); deleteSel(); }
+  if((e.ctrlKey||e.metaKey)&&e.key==="z"){ e.preventDefault(); undo(); }
+  if(e.key==="v"||e.key==="1")setTool("select"); if(e.key==="r"||e.key==="2")setTool("room"); if(e.key==="h"||e.key==="3")setTool("pan"); });
+
+window.addEventListener("resize",resize);
+
+/* ============================ Boot ============================ */
+function boot(){ renderPlanBar(); renderPanel(); renderConstruction(); renderRec(); updateDelBtn(); setHint(); draw(); }
+function init(){ var th=lsGet(LS.theme); if(th&&th!=="system")document.documentElement.setAttribute("data-theme",th);
+  refreshPalette(); loadPlans(); resize(); boot(); }
+init();
+</script>
+</body>
+</html>

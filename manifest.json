@@ -1,0 +1,14 @@
+{
+  "name": "Groundwork — Floor Plan & Earth Home Studio",
+  "short_name": "Groundwork",
+  "description": "Design floor plans, run the numbers on cost and materials, and get guidance for earth homes — built for touch tablets.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#f3f1ea",
+  "theme_color": "#2f6d4f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
