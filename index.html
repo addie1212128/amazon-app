@@ -394,9 +394,27 @@ var CT = {
     needs:["Engineered reinforced-concrete / ICF / CMU structure for heavy earth + roof loads","Multi-layer waterproofing membrane (EPDM, bentonite or self-adhesive sheet)","Serious drainage — perimeter & footing drains, swales, no high water table","Rigid insulation on the OUTSIDE of the waterproofing","Equator-facing glazing, atrium or courtyard for light & egress","Radon mitigation + good ventilation","Structural engineer + local code approval (non-negotiable)"],
     note:"Earth banked against the walls (earth-bermed), set into a hillside (in-hill), or fully underground. Famous for steady indoor temperatures, storm & fire resistance, and quiet. Costs more upfront — heavy structure, excavation and waterproofing — but pays back in very low energy bills.",
     mats:function(c){ var contact=c.wallLen*c.h+c.area;
-      return [["Reinforced concrete",fmt((c.wallLen*c.h*c.t+c.area*0.83)/27)+" cu yd"],["Waterproof membrane",fmt(contact)+" sq ft"],["Exterior rigid insulation",fmt(contact)+" sq ft"],["Drainage gravel",fmt(c.wallLen*3/27)+" cu yd"],["Earth cover / backfill","site soil (large)"],["Structure","engineered rebar + slab"]]; } }
+      return [["Reinforced concrete",fmt((c.wallLen*c.h*c.t+c.area*0.83)/27)+" cu yd"],["Waterproof membrane",fmt(contact)+" sq ft"],["Exterior rigid insulation",fmt(contact)+" sq ft"],["Drainage gravel",fmt(c.wallLen*3/27)+" cu yd"],["Earth cover / backfill","site soil (large)"],["Structure","engineered rebar + slab"]]; } },
+
+  cordwood:{ name:"Cordwood", icon:"🪵", t:1.5, rate:120, range:[80,180],
+    mass:"Medium–high", insul:"Medium (core fill)", skill:"DIY-friendly", labor:"Very high",
+    climates:{hotdry:2,temperate:3,cold:3,wet:1}, prio:{cost:3,insulation:2,durability:2,diy:3},
+    climate:"Loves temperate and cold climates — mortar for mass, an insulated core for warmth. Keep it dry with big overhangs and a dry foundation, and never build with green (unseasoned) wood.",
+    needs:["Well-seasoned, debarked softwood (1+ year dry) — never green wood","Post-and-beam frame, or buttressed / curved load-bearing walls","Lime or cement-lime mortar beds","Insulated core fill (sawdust-lime or perlite) down the wall's centre","Big roof overhangs + a dry foundation to shed rain","Standard footing / foundation"],
+    note:"Short, firewood-length logs laid crosswise and bedded in mortar, with an insulated core down the middle of the wall. Cheap if you have the wood, very hands-on, and forgiving of curves. The golden rule: seasoned, debarked wood and a good hat and boots.",
+    mats:function(c){ var vol=c.wallLen*c.h*c.t;
+      return [["Cordwood (softwood)",fmt(vol*0.6/128)+" cords"],["Mortar",fmt(vol*0.25/27)+" cu yd"],["Core insulation fill",fmt(vol*0.15/27)+" cu yd"],["Seasoning","debarked · 1+ yr dry"],["Roof overhang","16–24\""]]; } },
+
+  timberframe:{ name:"Timber frame", icon:"⛩️", green:true, t:0.83, rate:270, range:[200,400],
+    mass:"Low", insul:"Very high (SIPs)", skill:"Skilled / kit", labor:"Medium–high",
+    climates:{hotdry:2,temperate:3,cold:3,wet:2}, prio:{cost:1,insulation:3,durability:3,diy:1},
+    climate:"Works in any climate — the timber skeleton carries the house and the enclosure (usually SIPs) sets the performance. Superb insulation and longevity when wrapped in SIPs, so it shines in cold climates.",
+    needs:["Quality heavy timber (local or reclaimed), or a timber-frame kit","Mortise-and-tenon joinery with wooden pegs (no nails in the frame)","An enclosure system — SIPs are typical for high insulation","Standard foundation (slab or crawlspace)","A raising crew / crane for frame-raising day","Standard permits & inspections"],
+    note:"A heavy-timber skeleton of posts and beams joined with mortise-and-tenon joinery and wooden pegs. The walls are a separate enclosure, commonly SIPs for high insulation. Beautiful, strong and long-lived — a premium build, or a kit you raise yourself.",
+    mats:function(c){ var encl=c.wallLen*c.h+c.area;
+      return [["Heavy timbers",fmt(c.area*3.5)+" board-ft"],["Enclosure (SIPs)",fmt(encl)+" sq ft"],["Joinery","mortise & tenon + oak pegs"],["Insulation","in SIPs (high R)"],["Foundation","slab or crawlspace"]]; } }
 };
-var CT_ORDER=["earthbag","cob","rammed","adobe","strawbale","earthship","earthshelter","conventional"];
+var CT_ORDER=["earthbag","cob","rammed","adobe","strawbale","earthship","earthshelter","cordwood","timberframe","conventional"];
 var CLIMATES=[["hotdry","Hot & dry"],["temperate","Temperate"],["cold","Cold"],["wet","Wet / humid"]];
 var PRIOS=[["cost","Lowest cost"],["insulation","Warmth"],["durability","Durability"],["diy","Easy DIY"]];
 
