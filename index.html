@@ -488,6 +488,7 @@ function draw(){
   drawGrid();
   for(var i=0;i<plan.rooms.length;i++) drawRoomShell(plan.rooms[i]);
   for(var fi=0;fi<plan.furniture.length;fi++) paintFurn(ctx, plan.furniture[fi], w2s, plan.scale);
+  for(var si=0;si<plan.furniture.length;si++){ if(plan.furniture[si].type==="stairs") drawStairBadge(plan.furniture[si]); }
   for(var li=0;li<plan.rooms.length;li++){ var rl=plan.rooms[li]; drawLabel(rl, w2s(rl.x,rl.y), w2s(rl.x+rl.w,rl.y+rl.h)); }
   var sel=getSel(); if(sel){ if(selKind==="room") drawSelection(sel); else drawFurnSelection(sel); }
   if(draft) drawDraft();
@@ -607,7 +608,7 @@ function roomAt(wx,wy){ for(var i=plan.rooms.length-1;i>=0;i--){ var r=plan.room
 function handleAt(r,sx,sy){ var hs=handlePts(r); for(var i=0;i<hs.length;i++){ var s=w2s(hs[i].x,hs[i].y); if(Math.hypot(s.x-sx,s.y-sy)<=20) return hs[i].c; } return null; }
 
 /* ============================ Furniture & fixtures ============================ */
-var furnLW=1.5, FW=0, FH=0, snapF_=0.25;
+var furnLW=1.5, FW=0, FH=0, snapF_=0.25, curFurn=null;
 function snapF(v){ return Math.round(v/snapF_)*snapF_; }
 function fset(g,fill){ g.lineWidth=furnLW; g.lineJoin="round"; g.lineCap="round"; g.strokeStyle=P.furn; g.fillStyle=fill||P.furnf; }
 function rrp(g,x,y,w,h,r){ r=Math.max(0,Math.min(r,Math.abs(w)/2,Math.abs(h)/2)); g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
@@ -656,7 +657,7 @@ function D_waterheater(g,w,h){ boxR(g,w,h,w*0.04); circ(g,w/2,h/2,Math.min(w,h)*
 function D_hvac(g,w,h){ boxR(g,w,h,w*0.04); for(var i=1;i<4;i++) seg(g,w*0.14,h*i/4,w*0.86,h*i/4); }
 function D_fireplace(g,w,h){ boxR(g,w,h,Math.min(w,h)*0.08); seg(g,0,h*0.22,w,h*0.22); var fx=w*0.16,fy=h*0.34,fw=w*0.68,fh=h*0.56; rrp(g,fx,fy,fw,fh,Math.min(fw,fh)*0.12); g.fillStyle="#2b2521"; g.fill(); g.lineWidth=furnLW; g.strokeStyle=P.furn; g.stroke(); var by=fy+fh*0.9, cx=fx+fw/2; flame(g,cx,by,fh*0.74,fw*0.17,"#c0552a"); flame(g,cx-fw*0.2,by,fh*0.54,fw*0.13,"#e68a3c"); flame(g,cx+fw*0.2,by,fh*0.54,fw*0.13,"#e68a3c"); flame(g,cx,by,fh*0.42,fw*0.09,"#f6c64a"); }
 function D_stove(g,w,h){ circ(g,w/2,h/2,Math.min(w,h)*0.42); var r=Math.min(w,h)*0.2; rrp(g,w/2-r,h/2-r*0.25,r*2,r*1.25,r*0.2); g.fillStyle="#2b2521"; g.fill(); g.lineWidth=furnLW; g.strokeStyle=P.furn; g.stroke(); flame(g,w/2,h/2+r*0.78,r*1.1,r*0.42,"#e68a3c"); dot(g,w*0.22,h*0.82,furnLW*1.3); dot(g,w*0.78,h*0.82,furnLW*1.3); }
-function D_stairs(g,w,h){ boxR(g,w,h,0); var n=Math.max(3,Math.round(FH/0.85)); for(var i=1;i<n;i++) seg(g,0,h*i/n,w,h*i/n); seg(g,w/2,h*0.9,w/2,h*0.12); seg(g,w/2-w*0.14,h*0.26,w/2,h*0.12); seg(g,w/2+w*0.14,h*0.26,w/2,h*0.12); }
+function D_stairs(g,w,h){ boxR(g,w,h,0); var n=(curFurn&&curFurn.steps)?curFurn.steps:Math.max(2,Math.round(FH/0.9)); for(var i=1;i<n;i++) seg(g,0,h*i/n,w,h*i/n); seg(g,w/2,h*0.9,w/2,h*0.12); seg(g,w/2-w*0.14,h*0.26,w/2,h*0.12); seg(g,w/2+w*0.14,h*0.26,w/2,h*0.12); }
 function D_column(g,w,h){ g.beginPath(); g.arc(w/2,h/2,Math.min(w,h)*0.44,0,7); g.fillStyle=P.furn; g.fill(); }
 function D_car(g,w,h){ boxR(g,w,h,Math.min(w,h)*0.24); strokeR(g,w*0.16,h*0.22,w*0.68,h*0.44,Math.min(w,h)*0.12); seg(g,w*0.16,h*0.4,w*0.84,h*0.4); g.fillStyle=P.furn; var ww=w*0.11,wh=h*0.08; [[-ww*0.4,h*0.2],[w-ww*0.6,h*0.2],[-ww*0.4,h*0.7],[w-ww*0.6,h*0.7]].forEach(function(p){ rrp(g,p[0],p[1],ww,wh,wh*0.4); g.fill(); }); }
 function D_hottub(g,w,h){ circ(g,w/2,h/2,Math.min(w,h)*0.47); circ(g,w/2,h/2,Math.min(w,h)*0.33); for(var a=0;a<8;a++){ var an=a/8*6.283; dot(g,w/2+Math.cos(an)*Math.min(w,h)*0.4,h/2+Math.sin(an)*Math.min(w,h)*0.4,furnLW*1.1); } }
@@ -717,7 +718,7 @@ var FURN={
   hvac:{name:"HVAC / Furnace",cat:"util",w:2.6,h:2.6,d:D_hvac},
   fireplace:{name:"Fireplace",cat:"fix",w:5,h:1.8,d:D_fireplace},
   wood_stove:{name:"Wood Stove",cat:"fix",w:2.6,h:2.6,d:D_stove},
-  stairs:{name:"Stairs",cat:"fix",w:3,h:10,d:D_stairs},
+  stairs:{name:"Stairs",cat:"fix",w:3,h:12,d:D_stairs},
   column:{name:"Column",cat:"fix",w:1,h:1,d:D_column},
   car:{name:"Car",cat:"out",w:6,h:15,d:D_car},
   hot_tub:{name:"Hot Tub",cat:"out",w:7,h:7,d:D_hottub},
@@ -740,7 +741,7 @@ function furnHandleAt(f,sx,sy){ for(var i=0;i<CORNERS.length;i++){ var cw=furnCo
 function furnRotWorld(f){ var c=furnCenter(f), v=rot2(0,-(f.h/2+22/plan.scale),f.rot); return {x:c.x+v.x,y:c.y+v.y}; }
 
 function paintFurn(g,f,W2P,sc){ var c=furnCenter(f), s=W2P(c.x,c.y); g.save(); g.translate(s.x,s.y); g.rotate(f.rot||0);
-  var wp=f.w*sc, hp=f.h*sc; g.translate(-wp/2,-hp/2); FW=f.w; FH=f.h; furnLW=Math.max(1.1,Math.min(wp,hp)*0.05);
+  var wp=f.w*sc, hp=f.h*sc; g.translate(-wp/2,-hp/2); FW=f.w; FH=f.h; curFurn=f; furnLW=Math.max(1.1,Math.min(wp,hp)*0.05);
   (FURN[f.type]||FURN.box).d(g,wp,hp); g.restore(); }
 
 function drawFurnSelection(f){ var pts=[furnCornerWorld(f,-1,-1),furnCornerWorld(f,1,-1),furnCornerWorld(f,1,1),furnCornerWorld(f,-1,1)];
@@ -953,17 +954,42 @@ function renderFurnPalette(){ var cats=document.getElementById("furnCats"); if(!
 }
 function addFurn(key){ var it=FURN[key]; if(!it)return; pushHistory();
   var f={id:uid(),type:key,x:snapF(plan.cam.x-it.w/2),y:snapF(plan.cam.y-it.h/2),w:it.w,h:it.h,rot:0};
+  if(key==="stairs") f.steps=Math.max(2,Math.round((plan.wallH+1)*12/7.5));
   plan.furniture.push(f); selKind="furn"; selId=f.id; selOp=null; setTool("select"); persist(); draw(); renderPanel(); updateDelBtn();
   toast("Added "+it.name+" — drag it into place");
   var pt=document.getElementById("panelToggle"); if(pt && pt.offsetParent!==null){ panel.classList.remove("open"); scrim.classList.remove("show"); }
 }
 function renderFurnSize(){ var f=getFurn(selId); if(!f)return; var w=document.getElementById("fwVal"), d=document.getElementById("fdVal"); if(w)w.textContent=fmtFt(f.w); if(d)d.textContent=fmtFt(f.h); }
 function syncFurnInputs(f){ var a=document.getElementById("fwIn"),b=document.getElementById("fdIn"); if(a)a.value=f.w; if(b)b.value=f.h; renderFurnSize(); }
+function stairMath(f){ var steps=f.steps||Math.max(2,Math.round(f.h/0.9)), run=f.h, climb=plan.wallH+1;
+  var tread=run/steps*12, rise=climb/steps*12, ok=(rise<=7.75&&tread>=10); return {steps:steps,run:run,climb:climb,tread:tread,rise:rise,ok:ok}; }
+function stairRows(m){ return '<div class="mat"><span class="k">Treads shown</span><span class="v">'+m.steps+'</span></div>'+
+  '<div class="mat"><span class="k">Tread depth</span><span class="v">'+m.tread.toFixed(1)+' in</span></div>'+
+  '<div class="mat"><span class="k">Rise per step</span><span class="v">'+m.rise.toFixed(1)+' in</span></div>'+
+  '<div class="mat"><span class="k">Total climb</span><span class="v">'+fmtFt(m.climb)+'</span></div>'; }
+function stairNote(m){ return m.ok ? "✅ Comfortable — within the usual tread ≥ 10″ / rise ≤ 7¾″ guideline." : "⚠️ Steep — aim for tread ≥ 10″ and rise ≤ 7¾″ (add steps, or lengthen the run)."; }
+function stairsEditorHTML(f){ var m=stairMath(f);
+  var s='<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">';
+  s+='<div class="field"><label>Steps (to next floor)</label><div class="ctl"><div class="num"><button id="stM">−</button><input id="stIn" type="number" inputmode="numeric" value="'+m.steps+'"><button id="stP">＋</button></div></div></div>';
+  s+='<div class="mats" id="stMath">'+stairRows(m)+'</div>';
+  s+='<p class="note" id="stNote">'+stairNote(m)+'</p><p class="note">Climb = wall height + 1 ft of floor structure; set wall height under <b>Build type &amp; cost</b>. Make the stair longer (drag a corner) for shallower, comfier steps.</p></div>';
+  return s; }
+function wireStairs(f){ var inp=document.getElementById("stIn"); if(!inp)return;
+  function set(n){ pushHistory(); f.steps=Math.max(2,Math.min(40,Math.round(n))); inp.value=f.steps; var m=stairMath(f);
+    var mm=document.getElementById("stMath"); if(mm)mm.innerHTML=stairRows(m); var nn=document.getElementById("stNote"); if(nn)nn.innerHTML=stairNote(m); persist(); draw(); }
+  document.getElementById("stM").onclick=function(){ set((f.steps||2)-1); };
+  document.getElementById("stP").onclick=function(){ set((f.steps||2)+1); };
+  inp.addEventListener("change",function(){ set(+inp.value||f.steps); }); }
+function drawStairBadge(f){ var n=f.steps||Math.max(2,Math.round(f.h/0.9)), c=furnCenter(f), s=w2s(c.x,c.y);
+  var txt=n+" steps ↑"; ctx.save(); ctx.font="700 12px "+getFont(); ctx.textAlign="center"; ctx.textBaseline="middle";
+  var bw=ctx.measureText(txt).width+14, bh=20; rrp(ctx,s.x-bw/2,s.y-bh/2,bw,bh,9); ctx.fillStyle=P.accent; ctx.fill();
+  ctx.fillStyle="#fff"; ctx.fillText(txt,s.x,s.y+0.5); ctx.restore(); }
 function renderFurnEditor(f){
   var h='<div class="stat-grid"><div class="stat"><div class="k">Width</div><div class="v" id="fwVal">'+fmtFt(f.w)+'</div></div><div class="stat"><div class="k">Depth</div><div class="v" id="fdVal">'+fmtFt(f.h)+'</div></div></div>';
   h+='<div class="field"><label>Width</label><div class="ctl"><div class="num"><button data-fsz="w:-0.5">−</button><input id="fwIn" type="number" inputmode="decimal" value="'+f.w+'"><button data-fsz="w:0.5">＋</button></div><span class="note" style="margin:0">ft</span></div></div>';
   h+='<div class="field"><label>Depth</label><div class="ctl"><div class="num"><button data-fsz="h:-0.5">−</button><input id="fdIn" type="number" inputmode="decimal" value="'+f.h+'"><button data-fsz="h:0.5">＋</button></div><span class="note" style="margin:0">ft</span></div></div>';
   h+='<div class="rotrow"><button class="btn sm" id="rotL">⟲ 15°</button><button class="btn sm" id="rotR">⟳ 15°</button><button class="btn sm" id="rot90">⟳ 90°</button><button class="btn sm" id="rot0">Reset</button></div>';
+  if(f.type==="stairs"){ if(!f.steps) f.steps=Math.max(2,Math.round(f.h/0.9)); h+=stairsEditorHTML(f); }
   h+='<div class="row2" style="margin-top:8px"><button class="btn sm" id="dupF">⧉ Duplicate</button><button class="btn sm" id="delF" style="color:var(--bad)">🗑 Delete</button></div>';
   h+='<p class="note">Drag to move it. Use the round handle above it to spin, or a corner to resize.</p>';
   document.getElementById("roomBody").innerHTML=h;
@@ -977,6 +1003,7 @@ function renderFurnEditor(f){
   document.getElementById("rot0").onclick=function(){ pushHistory(); f.rot=0; persist(); draw(); };
   document.getElementById("dupF").onclick=function(){ pushHistory(); var n=clone(f); n.id=uid(); n.x=snapF(f.x+1); n.y=snapF(f.y+1); plan.furniture.push(n); selId=n.id; persist(); draw(); renderPanel(); toast("Duplicated"); };
   document.getElementById("delF").onclick=deleteSel;
+  if(f.type==="stairs") wireStairs(f);
 }
 
 function renderConstruction(){
