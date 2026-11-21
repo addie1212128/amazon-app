@@ -1,6 +1,6 @@
 # Groundwork
 
-A touch-first **floor plan & house plan maker** built for an Amazon Fire tablet. Draw rooms, run the numbers (floor area, cost, materials), and get real guidance for **earth homes** — earthbag, cob, rammed earth, adobe, straw bale and earthship builds.
+A touch-first **floor plan & house plan maker** built for an Amazon Fire tablet. Draw rooms, run the numbers (floor area, cost, materials), and get real guidance for **earth homes** — earthbag, cob, rammed earth, adobe, straw bale, earthship and earth-sheltered (bermed / underground) builds.
 
 It's a single self-contained web app (`index.html`) — no build step, no server, works offline once it's loaded.
 

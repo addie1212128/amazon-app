@@ -385,9 +385,18 @@ var CT = {
     needs:["Earth-rammed tires for load-bearing walls","Glazed face toward the equator (passive solar)","Earth berming + thermal mass","Water catchment + cistern + greywater planters","Solar PV / off-grid systems","Check local code early — approvals can be tricky"],
     note:"A whole off-grid system, not just walls: tire-and-earth mass, a solar greenhouse, water harvesting and power. Ambitious but self-sufficient.",
     mats:function(c){ var face=c.wallLen*c.h;
-      return [["Used tires (rammed)",fmt(face*0.53)+" tires"],["Cans / bottles","infill walls"],["South glazing","solar face"],["Systems","cistern · greywater · PV"]]; } }
+      return [["Used tires (rammed)",fmt(face*0.53)+" tires"],["Cans / bottles","infill walls"],["South glazing","solar face"],["Systems","cistern · greywater · PV"]]; } },
+
+  earthshelter:{ name:"Earth-sheltered", icon:"⛰️", t:1.0, rate:250, range:[200,400],
+    mass:"Very high", insul:"High (ext. rigid)", skill:"Engineered", labor:"Very high",
+    climates:{hotdry:3,temperate:3,cold:3,wet:1}, prio:{cost:1,insulation:3,durability:3,diy:1},
+    climate:"Best where you need both heating and cooling — the surrounding earth holds a steady temperature all year. Face living spaces toward the equator for daylight and passive solar; in hot-humid climates, detail hard against condensation.",
+    needs:["Engineered reinforced-concrete / ICF / CMU structure for heavy earth + roof loads","Multi-layer waterproofing membrane (EPDM, bentonite or self-adhesive sheet)","Serious drainage — perimeter & footing drains, swales, no high water table","Rigid insulation on the OUTSIDE of the waterproofing","Equator-facing glazing, atrium or courtyard for light & egress","Radon mitigation + good ventilation","Structural engineer + local code approval (non-negotiable)"],
+    note:"Earth banked against the walls (earth-bermed), set into a hillside (in-hill), or fully underground. Famous for steady indoor temperatures, storm & fire resistance, and quiet. Costs more upfront — heavy structure, excavation and waterproofing — but pays back in very low energy bills.",
+    mats:function(c){ var contact=c.wallLen*c.h+c.area;
+      return [["Reinforced concrete",fmt((c.wallLen*c.h*c.t+c.area*0.83)/27)+" cu yd"],["Waterproof membrane",fmt(contact)+" sq ft"],["Exterior rigid insulation",fmt(contact)+" sq ft"],["Drainage gravel",fmt(c.wallLen*3/27)+" cu yd"],["Earth cover / backfill","site soil (large)"],["Structure","engineered rebar + slab"]]; } }
 };
-var CT_ORDER=["earthbag","cob","rammed","adobe","strawbale","earthship","conventional"];
+var CT_ORDER=["earthbag","cob","rammed","adobe","strawbale","earthship","earthshelter","conventional"];
 var CLIMATES=[["hotdry","Hot & dry"],["temperate","Temperate"],["cold","Cold"],["wet","Wet / humid"]];
 var PRIOS=[["cost","Lowest cost"],["insulation","Warmth"],["durability","Durability"],["diy","Easy DIY"]];
 
