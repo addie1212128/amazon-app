@@ -636,10 +636,20 @@ function D_hottub(g,w,h){ circ(g,w/2,h/2,Math.min(w,h)*0.47); circ(g,w/2,h/2,Mat
 function D_grill(g,w,h){ boxR(g,w,h,Math.min(w,h)*0.16); for(var i=1;i<5;i++) seg(g,w*0.12,h*i/5,w*0.88,h*i/5); }
 function D_bench(g,w,h){ boxR(g,w,h,Math.min(w,h)*0.1); seg(g,0,h*0.4,w,h*0.4); seg(g,0,h*0.64,w,h*0.64); }
 function D_box(g,w,h){ boxR(g,w,h,Math.min(w,h)*0.08); }
+function D_sectional(g,w,h){ var ax=w*0.46, ay=h*0.54, bk=Math.min(w,h)*0.17;
+  g.beginPath(); g.moveTo(0,0); g.lineTo(ax,0); g.lineTo(ax,ay); g.lineTo(w,ay); g.lineTo(w,h); g.lineTo(0,h); g.closePath(); fset(g); g.fill(); g.stroke();
+  seg(g,bk,0,bk,h-bk); seg(g,bk,h-bk,w,h-bk); seg(g,bk,ay,ax,ay); seg(g,ax,ay,ax,h-bk);
+  var md=(bk+ax)/2; seg(g,md,0,md,ay); }
+function D_tableset(g,w,h){ var tw=w*0.52, th=h*0.46, tx=(w-tw)/2, ty=(h-th)/2, cs=Math.min(w,h)*0.17, r=cs*0.22;
+  function chair(cx,cy){ rrp(g,cx-cs/2,cy-cs/2,cs,cs,r); fset(g); g.fill(); g.stroke(); }
+  chair(w*0.34,ty-cs*0.62); chair(w*0.66,ty-cs*0.62); chair(w*0.34,ty+th+cs*0.62); chair(w*0.66,ty+th+cs*0.62);
+  chair(tx-cs*0.62,h/2); chair(tx+tw+cs*0.62,h/2);
+  rrp(g,tx,ty,tw,th,Math.min(tw,th)*0.08); fset(g); g.fill(); g.stroke(); }
 
 var FURN={
   sofa:{name:"Sofa",cat:"living",w:6.5,h:2.8,d:D_couch},
   loveseat:{name:"Loveseat",cat:"living",w:4.5,h:2.6,d:D_couch},
+  sectional:{name:"Sectional Sofa",cat:"living",w:9,h:7,d:D_sectional},
   armchair:{name:"Armchair",cat:"living",w:3,h:3,d:D_armchair},
   coffee_table:{name:"Coffee Table",cat:"living",w:3.5,h:1.8,d:D_coffee},
   side_table:{name:"Side Table",cat:"living",w:1.6,h:1.6,d:D_sidetable},
@@ -661,6 +671,7 @@ var FURN={
   file_cabinet:{name:"File Cabinet",cat:"office",w:1.5,h:2,d:D_filecab},
   counter:{name:"Counter",cat:"kitchen",w:6,h:2,d:D_counter},
   island:{name:"Island",cat:"kitchen",w:5,h:3,d:D_island},
+  table_set:{name:"Table Set",cat:"kitchen",w:7,h:5,d:D_tableset},
   fridge:{name:"Refrigerator",cat:"kitchen",w:3,h:3,d:D_fridge},
   range:{name:"Range / Stove",cat:"kitchen",w:2.5,h:2.5,d:D_range},
   sink_kitchen:{name:"Kitchen Sink",cat:"kitchen",w:3,h:2,d:D_ksink},
@@ -687,7 +698,7 @@ var FURN={
   bench:{name:"Bench",cat:"out",w:4,h:1.4,d:D_bench},
   box:{name:"Box",cat:"fix",w:2,h:2,d:D_box}
 };
-var FURN_ORDER=["sofa","loveseat","armchair","coffee_table","side_table","tv","bookshelf","rug","piano","plant","bed_twin","bed_full","bed_queen","bed_king","nightstand","dresser","wardrobe","crib","desk","office_chair","file_cabinet","counter","island","fridge","range","sink_kitchen","dishwasher","toilet","sink_bath","vanity_double","tub","shower","dining_table","round_table","chair","washer","dryer","water_heater","hvac","fireplace","wood_stove","stairs","column","car","hot_tub","grill","bench"];
+var FURN_ORDER=["sofa","loveseat","sectional","armchair","coffee_table","side_table","tv","bookshelf","rug","piano","plant","bed_twin","bed_full","bed_queen","bed_king","nightstand","dresser","wardrobe","crib","desk","office_chair","file_cabinet","counter","island","table_set","fridge","range","sink_kitchen","dishwasher","toilet","sink_bath","vanity_double","tub","shower","dining_table","round_table","chair","washer","dryer","water_heater","hvac","fireplace","wood_stove","stairs","column","car","hot_tub","grill","bench"];
 var FURN_CATS=[["all","All"],["living","Living"],["bed","Bedroom"],["kitchen","Kitchen"],["bath","Bath"],["dining","Dining"],["office","Office"],["util","Utility"],["fix","Fixtures"],["out","Outdoor"]];
 
 function getFurn(id){ for(var i=0;i<plan.furniture.length;i++) if(plan.furniture[i].id===id) return plan.furniture[i]; return null; }
